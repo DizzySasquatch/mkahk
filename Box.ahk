@@ -6,14 +6,15 @@ defaultWinName := "Default"
 toggle := false
 winName := defaultWinName
 
-cardX := 477
+cardX := 430
 cardColors := [
-    { Index: 1, Name: "Gray", Hex: 0xF5F5F3, X: cardX, Y: 317 },
-    { Index: 2, Name: "Green", Hex: 0x10B723, X: cardX, Y: 353 },
-    { Index: 3, Name: "Blue", Hex: 0x3984EB, X: cardX, Y: 390 },
-    { Index: 4, Name: "Red", Hex: 0xDB0600, X: cardX, Y: 426 },
-    { Index: 5, Name: "Purple", Hex: 0xED39BF, X: cardX, Y: 463 },
+    { Index: 1, Name: "Gray", X: cardX, Y: 317 },
+    { Index: 2, Name: "Green", X: cardX, Y: 353 },
+    { Index: 3, Name: "Blue", X: cardX, Y: 390 },
+    { Index: 4, Name: "Red", X: cardX, Y: 426 },
+    { Index: 5, Name: "Purple", X: cardX, Y: 463 },
 ]
+cardBackground := 0xE3E3E3
 cardColorNames := []
 for color in cardColors
 {
@@ -238,17 +239,17 @@ RollCard()
     WinActivate(winName " ahk_exe MuMuPlayer.exe")
     mumuId := WinActive("ahk_exe MuMuPlayer.exe")
     game := "ahk_id " mumuId
+    WinMove(,, winSize.Width, winSize.Height, game)
 
     CoordMode("Pixel", "Window")
 
     purple := cardColors[5]
-    if (PixelGetColor(purple.X, purple.Y) == purple.Hex)
+    if (not ColorIsApproximatelyEqual(cardBackground, PixelGetColor(purple.X, purple.Y)))
     {
         return
     }
     while (toggle)
     {
-
         ControlSend keyConfirm, , game
         Sleep 250
 
@@ -259,11 +260,28 @@ RollCard()
                 continue
             }
             foundColor := PixelGetColor(color.X, color.Y)
-            if (foundColor == color.Hex)
+            if (not ColorIsApproximatelyEqual(cardBackground, foundColor))
             {
                 global toggle := false
                 return
             }
         }
     }
+}
+
+ColorIsApproximatelyEqual(color1, color2, tolerance := 35)
+{
+    r1 := (color1 >> 16) & 0xFF
+    g1 := (color1 >> 8) & 0xFF
+    b1 := color1 & 0xFF
+
+    r2 := (color2 >> 16) & 0xFF
+    g2 := (color2 >> 8) & 0xFF
+    b2 := color2 & 0xFF
+
+    dr := r1 - r2
+    dg := g1 - g2
+    db := b1 - b2
+
+    return Sqrt(dr**2 + dg**2 + db**2) <= tolerance
 }
