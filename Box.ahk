@@ -175,6 +175,7 @@ OpenBoxes() {
 }
 
 ClearAllBooks() {
+    ;still cancel for each ClearBooks needed
     ClearBooks(1)
     ClearBooks(2)
     ClearBooks(3)
@@ -194,7 +195,7 @@ ClearBooks(type) {
 
     count := 0
 
-    while (count < 3) {
+    while (count < 3 && toggle) {
         ControlSend keyScrolls[type][1], , game
         Sleep 500
 
@@ -209,6 +210,10 @@ ClearBooks(type) {
             i++
         }
 
+        if(toggle) {
+            break
+        }
+
         count++
 
         ControlSend keyScrollMax, , game
@@ -220,7 +225,7 @@ ClearBooks(type) {
         ControlSend keyScrolls[type][1], , game
         Sleep 500
 
-        ControlSend keyScrollMax, , game
+        ControlSend keyScrolls[type][1], , game
         Sleep 500
     }
 
