@@ -43,7 +43,7 @@
                 "radius_correction": 1,
                 "rel_position": {
                     "rel_x": 0.9289678135405105,
-                    "rel_y": 0.7938856015779092
+                    "rel_y": 0.7938856015779091
                 },
                 "visibility": true
             },
@@ -55,7 +55,7 @@
             },
             "rel_work_position": {
                 "rel_x": 0.9289678135405105,
-                "rel_y": 0.7938856015779092
+                "rel_y": 0.7938856015779091
             },
             "type": "Click"
         },
@@ -66,7 +66,7 @@
                 "description": "",
                 "radius_correction": 1,
                 "rel_position": {
-                    "rel_x": 0.9500554938956715,
+                    "rel_x": 0.9500554938956713,
                     "rel_y": 0.26429980276134124
                 },
                 "visibility": true
@@ -78,7 +78,7 @@
                 "virtual_key": 82
             },
             "rel_work_position": {
-                "rel_x": 0.9500554938956715,
+                "rel_x": 0.9500554938956713,
                 "rel_y": 0.26429980276134124
             },
             "type": "Click"
@@ -331,7 +331,7 @@
                 "radius_correction": 1,
                 "rel_position": {
                     "rel_x": 0.5099889012208657,
-                    "rel_y": 0.9072978303747534
+                    "rel_y": 0.9072978303747535
                 },
                 "visibility": true
             },
@@ -343,7 +343,31 @@
             },
             "rel_work_position": {
                 "rel_x": 0.5099889012208657,
-                "rel_y": 0.9072978303747534
+                "rel_y": 0.9072978303747535
+            },
+            "type": "Click"
+        },
+        {
+            "editor_icon_scale": 1,
+            "icon": {
+                "background_color": "00000066",
+                "description": "",
+                "radius_correction": 1,
+                "rel_position": {
+                    "rel_x": 0.819000819000819,
+                    "rel_y": 0.9286754002911208
+                },
+                "visibility": true
+            },
+            "key": {
+                "device": "keyboard",
+                "scan_code": 22,
+                "text": "U",
+                "virtual_key": 85
+            },
+            "rel_work_position": {
+                "rel_x": 0.819000819000819,
+                "rel_y": 0.9286754002911208
             },
             "type": "Click"
         }
