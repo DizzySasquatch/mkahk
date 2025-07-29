@@ -210,7 +210,7 @@ ClearBooks(type) {
             i++
         }
 
-        if(toggle) {
+        if(!toggle) {
             break
         }
 
