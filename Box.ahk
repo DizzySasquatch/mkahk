@@ -1,18 +1,25 @@
 ﻿#Requires AutoHotkey v2.0
 #MaxThreadsPerHotkey 3
+#Include <config>
 ; #HotIf WinActive("ahk_exe MuMuPlayer.exe")
 
 defaultWinName := "Default"
 toggle := false
-winName := defaultWinName
+
+conf := Config.Load("config.json", true)
+
+if (!conf.instanceName or conf.instanceName = '')
+{
+    conf.instanceName := defaultWinName
+}
 
 cardX := 430
 cardColors := [
-    { Index: 1, Name: "Gray", X: cardX, Y: 317 },
-    { Index: 2, Name: "Green", X: cardX, Y: 353 },
-    { Index: 3, Name: "Blue", X: cardX, Y: 390 },
-    { Index: 4, Name: "Red", X: cardX, Y: 426 },
     { Index: 5, Name: "Purple", X: cardX, Y: 463 },
+    { Index: 4, Name: "Red", X: cardX, Y: 426 },
+    { Index: 3, Name: "Blue", X: cardX, Y: 390 },
+    { Index: 2, Name: "Green", X: cardX, Y: 353 },
+    { Index: 1, Name: "Gray", X: cardX, Y: 317 },
 ]
 cardBackground := 0xE3E3E3
 cardColorNames := []
@@ -34,7 +41,6 @@ keyLevel := "N"
 keyReset := "M"
 keyConfirm := "K"
 
-
 keyGreyScroll := "W"
 numGreyScroll := 7
 keyGreenScroll := "G"
@@ -50,13 +56,19 @@ keyScrolls := [ [keyGreyScroll, numGreyScroll], [keyGreenScroll, numGreenScroll]
 ui := Gui()
 
 ui.AddText(, "Name of Instance:")
-ui.edit := ui.AddEdit('xm w200 r1', defaultWinName)
+ui.edit := ui.AddEdit('xm w200 r1', conf.instanceName)
 ui.edit.OnEvent('Change', updateTitle)
 
-updateTitle(con, info) {
+updateTitle(con, info)
+{
     if (con.Value = '')
-        global winName := defaultWinName
-    else winName := con.Value
+    {
+        conf.instanceName := defaultWinName
+    }
+    else
+    {
+        conf.instanceName := con.Value
+    }
 }
 
 ui.openBoxes := ui.AddButton(,"Open Boxes")
@@ -101,11 +113,12 @@ LevelReset() {
 
     global toggle := !toggle
 
-    if(!toggle) {
+    if (!toggle)
+    {
         return
     }
 
-    WinActivate(winName " ahk_exe MuMuPlayer.exe")
+    WinActivate(conf.instanceName " ahk_exe MuMuPlayer.exe")
     mumuId := WinActive("ahk_exe MuMuPlayer.exe")
     game := "ahk_id " mumuId
 
@@ -135,15 +148,17 @@ LevelReset() {
 OpenBoxes() {
     global toggle := !toggle
 
-    if(!toggle) {
+    if (!toggle)
+    {
         return
     }
     
-    WinActivate(winName " ahk_exe MuMuPlayer.exe")
+    WinActivate(conf.instanceName " ahk_exe MuMuPlayer.exe")
     mumuId := WinActive("ahk_exe MuMuPlayer.exe")
     game := "ahk_id " mumuId
 
-    while (toggle) {
+    while (toggle)
+    {
         ControlSend keyOpenBox, , game
         Sleep 500
         if (!toggle) {
@@ -182,14 +197,14 @@ ClearAllBooks() {
 }
 
 ClearBooks(type) {
-
     global toggle := !toggle
 
-    if(!toggle) {
+    if (!toggle)
+    {
         return
     }
 
-    WinActivate(winName " ahk_exe MuMuPlayer.exe")
+    WinActivate(conf.instanceName " ahk_exe MuMuPlayer.exe")
     mumuId := WinActive("ahk_exe MuMuPlayer.exe")
     game := "ahk_id " mumuId
 
@@ -241,7 +256,7 @@ RollCard()
         return
     }
 
-    WinActivate(winName " ahk_exe MuMuPlayer.exe")
+    WinActivate(conf.instanceName " ahk_exe MuMuPlayer.exe")
     mumuId := WinActive("ahk_exe MuMuPlayer.exe")
     game := "ahk_id " mumuId
     WinMove(,, winSize.Width, winSize.Height, game)
