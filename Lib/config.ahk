@@ -18,6 +18,16 @@ class Config
 
     static Load(filename, saveOnEdit := false)
     {
+        if (not FileExist(filename))
+        {
+            defaultConfig := Config()
+            defaultConfig._meta.filename := filename
+            defaultConfig._meta.saveOnEdit := saveOnEdit
+            defaultConfig.instanceName := "Default"
+            defaultConfig.Save()
+            return defaultConfig
+        }
+
         cfg := JSON.parse(FileRead(filename), false, false, Config)
         cfg._meta := {
             filename: filename,
