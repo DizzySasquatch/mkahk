@@ -3,6 +3,32 @@
 #Include <config>
 ; #HotIf WinActive("ahk_exe MuMuPlayer.exe")
 
+try
+{
+    RunWait(A_ComSpec " /C git fetch origin", , "Hide")
+    RunWait(A_ComSpec " /C git rev-parse HEAD > version.txt", , "Hide")
+    localVersion := Trim(FileRead("version.txt"))
+    FileDelete("version.txt")
+    RunWait(A_ComSpec " /C git rev-parse origin/main > remoteVersion.txt", , "Hide")
+    remoteVersion := Trim(FileRead("remoteVersion.txt"))
+    FileDelete("remoteVersion.txt")
+    if (localVersion != remoteVersion)
+    {
+        result := MsgBox("A new version is available. Do you want to update?", , "YesNo")
+        if (result = "Yes")
+        {
+            RunWait(A_ComSpec " /C git reset --hard origin/main", , "Hide")
+            Reload()
+            Sleep(1000)
+            return
+        }
+    }
+}
+catch Error as e
+{
+    MsgBox("Failed to update.")
+}
+
 defaultWinName := "Default"
 toggle := false
 
