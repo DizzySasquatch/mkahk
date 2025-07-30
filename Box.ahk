@@ -6,7 +6,7 @@
 defaultWinName := "Default"
 toggle := false
 
-conf := Config.Load("config.json", true)
+conf := Config.Load("config.json")
 
 if (!conf.instanceName or conf.instanceName = '')
 {
@@ -54,6 +54,7 @@ keyScrolls := [ [keyGreyScroll, numGreyScroll], [keyGreenScroll, numGreenScroll]
 
 
 ui := Gui()
+ui.OnEvent('Close', (*) => conf.Save())
 
 ui.AddText(, "Name of Instance:")
 ui.edit := ui.AddEdit('xm w200 r1', conf.instanceName)

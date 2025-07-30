@@ -6,7 +6,6 @@ class Config
     ;@region metadata
     _meta := {
         filename: "",
-        saveOnEdit: false,
     }
     ;@endregion
 
@@ -16,13 +15,12 @@ class Config
     
     ;@endregion
 
-    static Load(filename, saveOnEdit := false)
+    static Load(filename)
     {
         if (not FileExist(filename))
         {
             defaultConfig := Config()
             defaultConfig._meta.filename := filename
-            defaultConfig._meta.saveOnEdit := saveOnEdit
             defaultConfig.instanceName := "Default"
             defaultConfig.Save()
             return defaultConfig
@@ -31,7 +29,6 @@ class Config
         cfg := JSON.parse(FileRead(filename), false, false, Config)
         cfg._meta := {
             filename: filename,
-            saveOnEdit: saveOnEdit,
         }
         return cfg
     }
@@ -39,27 +36,16 @@ class Config
     __Item[name]
     {
         get => this.%name%
-        set {
-            this.%name% := value
-            if (this._saveOnEdit)
-            {
-                this.Save()
-            }
-        }
+        set => this.%name% := value
     }
 
     Save()
     {
-        configWriter := FileOpen(this._filename, 'w')
+        configWriter := FileOpen(this._meta.filename, 'w')
         meta := this._meta
         this.DeleteProp('_meta')
         configWriter.Write(JSON.stringify(this))
         configWriter.Close()
         this._meta := meta
-    }
-
-    SetSaveOnEdit(value)
-    {
-        this._saveOnEdit := value
     }
 }
