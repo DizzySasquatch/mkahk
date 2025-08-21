@@ -359,7 +359,9 @@ UpdateScript()
                 Sleep(1000)
                 return
             }
+            return
         }
+        MsgBox("Your Script is up to date.", , "OK")
     }
     catch Error as e
     {
