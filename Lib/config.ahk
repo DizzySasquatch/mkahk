@@ -12,16 +12,20 @@ class Config
     ;@region properties
 
     instanceName := ""
-    
+    mumuExe := ""
+    skipUpdate := false
+
     ;@endregion
 
     static Load(filename)
     {
-        if (not FileExist(filename))
+        if ( not FileExist(filename))
         {
             defaultConfig := Config()
             defaultConfig._meta.filename := filename
             defaultConfig.instanceName := "Default"
+            defaultConfig.mumuExe := "MuMuNxDevice.exe"
+            defaultConfig.skipUpdate := false
             defaultConfig.Save()
             return defaultConfig
         }
@@ -44,7 +48,7 @@ class Config
         configWriter := FileOpen(this._meta.filename, 'w')
         meta := this._meta
         this.DeleteProp('_meta')
-        configWriter.Write(JSON.stringify(this))
+        configWriter.Write(JSON.stringify(this, , "    "))
         configWriter.Close()
         this._meta := meta
     }

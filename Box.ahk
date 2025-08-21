@@ -1,51 +1,55 @@
 ﻿#Requires AutoHotkey v2.0
 #MaxThreadsPerHotkey 3
-#Include <config>
-; #HotIf WinActive("ahk_exe MuMuPlayer.exe")
+#Include Lib/config.ahk
+; #HotIf WinActive("ahk_exe " conf.mumuExe)
 
-try
-{
-    RunWait(A_ComSpec " /C git fetch origin", , "Hide")
-    RunWait(A_ComSpec " /C git rev-parse HEAD > version.txt", , "Hide")
-    localVersion := Trim(FileRead("version.txt"))
-    FileDelete("version.txt")
-    RunWait(A_ComSpec " /C git rev-parse origin/main > remoteVersion.txt", , "Hide")
-    remoteVersion := Trim(FileRead("remoteVersion.txt"))
-    FileDelete("remoteVersion.txt")
-    if (localVersion != remoteVersion)
-    {
-        result := MsgBox("A new version is available. Do you want to update?", , "YesNo")
-        if (result = "Yes")
-        {
-            RunWait(A_ComSpec " /C git reset --hard origin/main", , "Hide")
-            Reload()
-            Sleep(1000)
-            return
-        }
-    }
-}
-catch Error as e
-{
-    MsgBox("Failed to update.")
-}
+; @region intelli-sense helpers
+
+/**
+ * @typedef {Gui} GenericUI
+ * @property {Map<string, Gui.Control>} Controls
+ */
+Gui.Prototype.Controls := Map()
+
+; @endregion
 
 defaultWinName := "Default"
 toggle := false
 
+/**
+ * @type {Config}
+ */
 conf := Config.Load("config.json")
 
 if (!conf.instanceName or conf.instanceName = '')
 {
     conf.instanceName := defaultWinName
 }
+if (!conf.mumuExe or conf.mumuExe = '')
+{
+    conf.mumuExe := "MuMuNxDevice.exe"
+}
+if (!conf.skipUpdate or conf.skipUpdate = '')
+{
+    conf.skipUpdate := false
+    UpdateScript() 
+}
+
+clearBookColors := [
+    "Gray",
+    "Green",
+    "Blue",
+    "All"
+]
+selectedClearBookColor := clearBookColors[1]
 
 cardX := 430
 cardColors := [
-    { Index: 5, Name: "Purple", X: cardX, Y: 463 },
-    { Index: 4, Name: "Red", X: cardX, Y: 426 },
-    { Index: 3, Name: "Blue", X: cardX, Y: 390 },
-    { Index: 2, Name: "Green", X: cardX, Y: 353 },
     { Index: 1, Name: "Gray", X: cardX, Y: 317 },
+    { Index: 2, Name: "Green", X: cardX, Y: 353 },
+    { Index: 3, Name: "Blue", X: cardX, Y: 390 },
+    { Index: 4, Name: "Red", X: cardX, Y: 426 },
+    { Index: 5, Name: "Purple", X: cardX, Y: 463 },
 ]
 cardBackground := 0xE3E3E3
 cardColorNames := []
@@ -53,7 +57,7 @@ for color in cardColors
 {
     cardColorNames.Push(color.Name)
 }
-selectedColorIndex := 1
+selectedColorIndex := 5
 winSize := { Width: 1336, Height: 788 }
 
 keyOpenBox := "Z" ; place key on "s" in "Use" when having boxes open
@@ -76,61 +80,63 @@ numBlueScroll := 10
 keyScrollRefresh := "R"
 keyScrollMax := "H"
 keyScrollCraft := "V"
-keyScrolls := [ [keyGreyScroll, numGreyScroll], [keyGreenScroll, numGreenScroll], [keyBlueScroll, numBlueScroll] ]
+keyScrolls := [
+    [keyGreyScroll, numGreyScroll],
+    [keyGreenScroll, numGreenScroll],
+    [keyBlueScroll, numBlueScroll],    
+]
 
+; @region UI
 
+/**
+ * @type {GenericUI}
+ */
 ui := Gui()
 ui.OnEvent('Close', (*) => conf.Save())
 
+dummy := ui.Controls
+
 ui.AddText(, "Name of Instance:")
-ui.edit := ui.AddEdit('xm w200 r1', conf.instanceName)
-ui.edit.OnEvent('Change', updateTitle)
+ui.Controls["edit"] := ui.AddEdit('xm w200 r1', conf.instanceName)
+ui.Controls["edit"].OnEvent('Change', updateTitle)
 
 updateTitle(con, info)
 {
-    if (con.Value = '')
-    {
-        conf.instanceName := defaultWinName
-    }
-    else
-    {
-        conf.instanceName := con.Value
-    }
+    conf.instanceName := con.Value || defaultWinName
 }
 
-ui.openBoxes := ui.AddButton(,"Open Boxes")
-ui.openBoxes.OnEvent('Click', (*) => OpenBoxes())
+ui.Controls["OpenBoxes"] := ui.AddButton(,"Open Boxes")
+ui.Controls["OpenBoxes"].OnEvent('Click', (*) => OpenBoxes())
 
-ui.restLevel := ui.AddButton(,"Level Reset")
-ui.restLevel.OnEvent("Click", (*) => LevelReset())
+ui.Controls["LevelReset"] := ui.AddButton(,"Level Reset")
+ui.Controls["LevelReset"].OnEvent("Click", (*) => LevelReset())
 
-ui.ClearGreyBooks := ui.AddButton(,"Clear grey Books")
-ui.ClearGreyBooks.OnEvent("Click", (*) => ClearBooks(1))
+ui.AddText(,"Clear Books")
+ui.Controls["ClearBookTier"] := ui.AddDropDownList("Choose1 Section", clearBookColors)
+ui.Controls["ClearBookTier"].OnEvent('Change', OnClearBookTierChange)
+OnClearBookTierChange(con, info) {
+    global selectedClearBookColor := con.Value
+}
+ui.Controls["ClearBooks"] := ui.AddButton("ys","Clear Books")
+ui.Controls["ClearBooks"].OnEvent("Click", (*) => ClearBooks(selectedClearBookColor))
 
-ui.ClearGreenBooks := ui.AddButton(,"Clear green Books")
-ui.ClearGreenBooks.OnEvent("Click", (*) => ClearBooks(2))
-
-ui.ClearBlueBooks := ui.AddButton(,"Clear blue Books")
-ui.ClearBlueBooks.OnEvent("Click", (*) => ClearBooks(3))
-
-ui.ClearAllBooks := ui.AddButton(,"Clear all Books")
-ui.ClearAllBooks.OnEvent("Click", (*) => ClearAllBooks())
-
-ui.tierSelect := ui.AddDropDownList("Choose1", cardColorNames)
-ui.tierSelect.OnEvent('Change', color_change)
-
-color_change(con, info) {
+ui.Controls["TierSelect"] := ui.AddDropDownList("Choose1 Section xs", cardColorNames)
+ui.Controls["TierSelect"].Choose(selectedColorIndex)
+ui.Controls["TierSelect"].OnEvent('Change', OnTierSelectChange)
+OnTierSelectChange(con, info) {
     global selectedColorIndex := con.Value
 }
+ui.Controls["RollCard"] := ui.AddButton("ys","Roll Card")
+ui.Controls["RollCard"].OnEvent("Click", (*) => RollCard())
 
-ui.RollCard := ui.AddButton(,"Roll Card")
-ui.RollCard.OnEvent("Click", (*) => RollCard())
+ui.Controls["Update"] := ui.AddButton("xs","Update Script")
+ui.Controls["Update"].OnEvent("Click", (*) => UpdateScript())
 
-
-ui.Exit := ui.AddButton(,"Cancel")
-ui.Exit.OnEvent("Click", (*) => Cancel())
+ui.Controls["Exit"] := ui.AddButton("xs", "Cancel")
+ui.Controls["Exit"].OnEvent("Click", (*) => Cancel())
 
 ui.Show('W250 H310')
+; @endregion
 
 Cancel() {
     global toggle := false
@@ -145,8 +151,8 @@ LevelReset() {
         return
     }
 
-    WinActivate(conf.instanceName " ahk_exe MuMuPlayer.exe")
-    mumuId := WinActive("ahk_exe MuMuPlayer.exe")
+    WinActivate(conf.instanceName " ahk_exe " conf.mumuExe)
+    mumuId := WinActive("ahk_exe " conf.mumuExe)
     game := "ahk_id " mumuId
 
     while (toggle) {
@@ -180,8 +186,8 @@ OpenBoxes() {
         return
     }
     
-    WinActivate(conf.instanceName " ahk_exe MuMuPlayer.exe")
-    mumuId := WinActive("ahk_exe MuMuPlayer.exe")
+    WinActivate(conf.instanceName " ahk_exe " conf.mumuExe)
+    mumuId := WinActive("ahk_exe " conf.mumuExe)
     game := "ahk_id " mumuId
 
     while (toggle)
@@ -216,14 +222,13 @@ OpenBoxes() {
     }
 }
 
-ClearAllBooks() {
-    ;still cancel for each ClearBooks needed
-    ClearBooks(1)
-    ClearBooks(2)
-    ClearBooks(3)
-}
-
 ClearBooks(type) {
+    if (type = clearBookColors.Length) {
+        ClearBooks(1)
+        ClearBooks(2)
+        ClearBooks(3)
+    }
+
     global toggle := !toggle
 
     if (!toggle)
@@ -231,8 +236,8 @@ ClearBooks(type) {
         return
     }
 
-    WinActivate(conf.instanceName " ahk_exe MuMuPlayer.exe")
-    mumuId := WinActive("ahk_exe MuMuPlayer.exe")
+    WinActivate(conf.instanceName " ahk_exe " conf.mumuExe)
+    mumuId := WinActive("ahk_exe " conf.mumuExe)
     game := "ahk_id " mumuId
 
     count := 0
@@ -283,8 +288,8 @@ RollCard()
         return
     }
 
-    WinActivate(conf.instanceName " ahk_exe MuMuPlayer.exe")
-    mumuId := WinActive("ahk_exe MuMuPlayer.exe")
+    WinActivate(conf.instanceName " ahk_exe " conf.mumuExe)
+    mumuId := WinActive("ahk_exe " conf.mumuExe)
     game := "ahk_id " mumuId
     WinMove(,, winSize.Width, winSize.Height, game)
 
@@ -331,4 +336,33 @@ ColorIsApproximatelyEqual(color1, color2, tolerance := 35)
     db := b1 - b2
 
     return Sqrt(dr**2 + dg**2 + db**2) <= tolerance
+}
+
+UpdateScript()
+{
+    try
+    {
+        RunWait(A_ComSpec " /C git fetch origin", , "Hide")
+        RunWait(A_ComSpec " /C git rev-parse HEAD > version.txt", , "Hide")
+        localVersion := Trim(FileRead("version.txt"))
+        FileDelete("version.txt")
+        RunWait(A_ComSpec " /C git rev-parse origin/main > remoteVersion.txt", , "Hide")
+        remoteVersion := Trim(FileRead("remoteVersion.txt"))
+        FileDelete("remoteVersion.txt")
+        if (localVersion != remoteVersion)
+        {
+            result := MsgBox("A new version is available. Do you want to update?", , "YesNo")
+            if (result = "Yes")
+            {
+                RunWait(A_ComSpec " /C git reset --hard origin/main", , "Hide")
+                Reload()
+                Sleep(1000)
+                return
+            }
+        }
+    }
+    catch Error as e
+    {
+        MsgBox(e.Message, "Failed to update")
+    }
 }
