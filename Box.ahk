@@ -45,11 +45,11 @@ selectedClearBookColor := clearBookColors[1]
 
 cardX := 430
 cardColors := [
-    { Index: 5, Name: "Purple", X: cardX, Y: 463 },
-    { Index: 4, Name: "Red", X: cardX, Y: 426 },
-    { Index: 3, Name: "Blue", X: cardX, Y: 390 },
-    { Index: 2, Name: "Green", X: cardX, Y: 353 },
     { Index: 1, Name: "Gray", X: cardX, Y: 317 },
+    { Index: 2, Name: "Green", X: cardX, Y: 353 },
+    { Index: 3, Name: "Blue", X: cardX, Y: 390 },
+    { Index: 4, Name: "Red", X: cardX, Y: 426 },
+    { Index: 5, Name: "Purple", X: cardX, Y: 463 },
 ]
 cardBackground := 0xE3E3E3
 cardColorNames := []
@@ -57,7 +57,7 @@ for color in cardColors
 {
     cardColorNames.Push(color.Name)
 }
-selectedColorIndex := 1
+selectedColorIndex := 5
 winSize := { Width: 1336, Height: 788 }
 
 keyOpenBox := "Z" ; place key on "s" in "Use" when having boxes open
@@ -121,6 +121,7 @@ ui.Controls["ClearBooks"] := ui.AddButton("ys","Clear Books")
 ui.Controls["ClearBooks"].OnEvent("Click", (*) => ClearBooks(selectedClearBookColor))
 
 ui.Controls["TierSelect"] := ui.AddDropDownList("Choose1 Section xs", cardColorNames)
+ui.Controls["TierSelect"].Choose(selectedColorIndex)
 ui.Controls["TierSelect"].OnEvent('Change', OnTierSelectChange)
 OnTierSelectChange(con, info) {
     global selectedColorIndex := con.Value
